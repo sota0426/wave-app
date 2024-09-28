@@ -1,0 +1,40 @@
+"use client"
+
+import { useState } from 'react'
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { CircularMotionWaveSimulationComponent } from "@/components/circular-motion-wave-simulation"
+import WaveInterferenceCircularMotion from "@/components/wave-interference-circular-motion"
+
+export default function Page() {
+  const [selectedPage, setSelectedPage] = useState<'circular' | 'interference'>('circular')
+
+  return (
+    <div className="p-4">
+      <Card className="mb-4">
+        <CardContent className="pt-6">
+          <div className="flex justify-center space-x-4">
+            <Button 
+              onClick={() => setSelectedPage('circular')}
+              variant={selectedPage === 'circular' ? 'default' : 'outline'}
+            >
+              単振動と等速円運動
+            </Button>
+            <Button 
+              onClick={() => setSelectedPage('interference')}
+              variant={selectedPage === 'interference' ? 'default' : 'outline'}
+            >
+              波の干渉と円運動
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+      
+      {selectedPage === 'circular' ? (
+        <CircularMotionWaveSimulationComponent />
+      ) : (
+        <WaveInterferenceCircularMotion />
+      )}
+    </div>
+  )
+}
