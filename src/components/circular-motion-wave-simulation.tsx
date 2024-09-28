@@ -7,7 +7,7 @@ import 'katex/dist/katex.min.css'
 
 export function CircularMotionWaveSimulationComponent() {
   const [period, setPeriod] = useState(4) // 周期（秒）
-  const [radius, setRadius] = useState(80)
+  const [radius, setRadius] = useState(100)
   const [numPoints, setNumPoints] = useState(20)
   const [time, setTime] = useState(0)
   const [isRunning, setIsRunning] = useState(true)
@@ -82,8 +82,8 @@ export function CircularMotionWaveSimulationComponent() {
   const getPointSize = (index: number , start : boolean) => {
     if (isCompareMode) {
       if (index === 0 && start === true) return 9 // 赤色の点を1.5倍に
-      if (index === selectedPoint) return 9 // 選択された点も大きく
-      return 3 // その他の点は小さく
+      if (index === selectedPoint && start === true) return 9 // 選択された点も大きく
+      return 2 // その他の点は小さく
     }
     // 通常モード: インデックスに基づいて大きさを変える
     const size = 9 - (index / numPoints) * 6 // 9から3の間で変化
@@ -107,7 +107,7 @@ export function CircularMotionWaveSimulationComponent() {
 
   useEffect(() => {
     const thetaRad = 2 * (time / period)
-    const newThetaDeg = (thetaRad * 180 / Math.PI).toFixed(0)
+    const newThetaDeg = (thetaRad * 180).toFixed(0)
     setThetaDeg(newThetaDeg)
   }, [time, period])
 
@@ -132,6 +132,7 @@ export function CircularMotionWaveSimulationComponent() {
   return (
     <div className="p-4 max-w-4xl mx-auto text-gray-800">
       <h1 className="text-2xl font-bold mb-4 text-gray-900">単振動と等速円運動の関係: 3D視点</h1>
+      <></>
       <div className="flex flex-col md:flex-row mb-8 space-y-4 md:space-y-0 md:space-x-4">
         <div ref={circularMotionRef} className="w-full md:w-1/2 aspect-square relative border border-gray-400 rounded">
           <svg className="w-full h-full">
@@ -184,7 +185,7 @@ export function CircularMotionWaveSimulationComponent() {
                 strokeWidth="2"
               />
             )}
-
+            {/* 赤色のθ表示 */}
             {rotationAngle === 0 && (
               <text
                 x={svgSize / 1.75}
@@ -196,6 +197,40 @@ export function CircularMotionWaveSimulationComponent() {
               >
                 θ= {thetaDeg}°
               </text>
+            )}
+
+            {/* 青い点と赤い点を結ぶ扇形の円弧（位相差） */}
+            {isCompareMode && selectedPoint !== null && (
+              <>
+                <path
+                  d={`
+                    M ${svgSize / 2} ${svgSize / 2} 
+                    L ${svgSize / 2 + getAngleCoordinates(-(time / period) * 2 * Math.PI, radius).x} 
+                      ${svgSize / 2 + getAngleCoordinates(-(time / period) * 2 * Math.PI, radius).y} 
+                    A ${radius} ${radius} 0 
+                    ${(getPhaseDifference()) > Math.PI ? 1 : 0} 
+                    1 
+                    ${svgSize / 2 + getAngleCoordinates((-(time / period) + (selectedPoint / numPoints)) * 2 * Math.PI, radius).x} 
+                    ${svgSize / 2 + getAngleCoordinates((-(time / period) + (selectedPoint / numPoints)) * 2 * Math.PI, radius).y}
+                    Z 
+                  `}
+                  fill="rgba(0, 116, 217, 0.2)"  // 薄い青色で扇形を塗る
+                  stroke="#0074D9"
+                  strokeWidth="2"
+                />
+                
+                {/* 青色の位相差表示 */}
+                <text
+                  x={svgSize / 2 + getAngleCoordinates(-(time / period - selectedPoint / numPoints / 2) * 2 * Math.PI, radius * 2 / 3).x}
+                  y={svgSize / 2 + getAngleCoordinates(-(time / period - selectedPoint / numPoints / 2) * 2 * Math.PI, radius *2 / 3).y}
+                  fontSize="14"
+                  fill="#0074D9"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                >
+                  Δθ = {(getPhaseDifference() * 180 / Math.PI).toFixed(0)}°
+                </text>
+              </>
             )}
 
             {points.map((point, i) => (
