@@ -36,7 +36,7 @@ export function CircularMotionWaveSimulationComponent() {
     let timer: NodeJS.Timeout
     if (isRunning) {
       timer = setInterval(() => {
-        setTime(t => (t + 0.01) % period)
+        setTime(t => (t + 0.02) % period)
       }, 50)
     }
     return () => clearInterval(timer)
@@ -79,9 +79,9 @@ export function CircularMotionWaveSimulationComponent() {
     return `hsl(${hue}, 100%, 45%)` // 彩度を下げて少し暗く
   }
 
-  const getPointSize = (index: number) => {
+  const getPointSize = (index: number , start : boolean) => {
     if (isCompareMode) {
-      if (index === 0) return 9 // 赤色の点を1.5倍に
+      if (index === 0 && start === true) return 9 // 赤色の点を1.5倍に
       if (index === selectedPoint) return 9 // 選択された点も大きく
       return 3 // その他の点は小さく
     }
@@ -213,7 +213,7 @@ export function CircularMotionWaveSimulationComponent() {
                 <circle
                   cx={`${50 + (point.x / svgSize * 100)}%`}
                   cy={`${50 + (point.y / svgSize * 100)}%`}
-                  r={getPointSize(i)}
+                  r={getPointSize(i ,true)}
                   fill={getColor(i)}
                   onClick={() => togglePoint(i)}
                   style={{ cursor: 'pointer' }}
@@ -251,7 +251,7 @@ export function CircularMotionWaveSimulationComponent() {
                 key={i}
                 cx={`${3 +(i / numPoints) * 50}%`}
                 cy={`${50 + (point.y / svgSize * 100)}%`}
-                r={getPointSize(i)}
+                r={getPointSize(i , true)}
                 fill={getColor(i)}
               />
             ))}
@@ -260,7 +260,7 @@ export function CircularMotionWaveSimulationComponent() {
                 key={i}
                 cx={`${53 +(i / numPoints) * 50}%`}
                 cy={`${50 + (point.y / svgSize * 100)}%`}
-                r={getPointSize(i)}
+                r={getPointSize(i , false)}
                 fill={getColor(i)}
               />
             ))}
