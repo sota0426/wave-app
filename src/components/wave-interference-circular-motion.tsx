@@ -97,7 +97,7 @@ export default function WaveInterferenceCircularMotion() {
 
   return (
     <div className="p-4 max-w-full mx-auto">
-    <h1 className="text-2xl font-bold mb-4">波の干渉と円運動シミュレーション</h1>
+    <h1 className="text-2xl font-bold mb-4">波の干渉のシミュレーション（波の干渉、うなりの原理）</h1>
     <div className="flex flex-col lg:flex-row mb-8 space-y-4 lg:space-y-0 lg:space-x-4">
       {/* 左の円の表示 */}
       <div className="w-full lg:w-1/4 h-[300px] relative border border-gray-300 rounded">
