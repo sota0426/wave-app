@@ -16,13 +16,13 @@ export default function Page() {
           <div className="flex justify-center space-x-4">
             <Button 
               onClick={() => setSelectedPage('circular')}
-              variant={selectedPage === 'circular' ? 'default' : 'outline'}
+              variant={selectedPage === 'circular' ? 'outline' : 'default'}
             >
               単振動と等速円運動
             </Button>
             <Button 
               onClick={() => setSelectedPage('interference')}
-              variant={selectedPage === 'interference' ? 'default' : 'outline'}
+              variant={selectedPage === 'interference' ? 'outline' : 'default'}
             >
               波の干渉と円運動
             </Button>

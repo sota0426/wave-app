@@ -124,7 +124,7 @@ export function CircularMotionWaveSimulationComponent() {
     const omega = `2\\pi\\frac{t}{T}`
     const phaseDiff = isBlue ? `2\\pi\\frac{x}{\\lambda}` : ''
     const numericOmega = `${(time / period * 2).toFixed(1)}π`
-    const numericPhaseDiff = isBlue ? (selectedPoint / numPoints * 2).toFixed(1) : '0' 
+    const numericPhaseDiff = isBlue ? ((selectedPoint ?? 0) / numPoints * 2).toFixed(1) : '0'; // null チェック後に計算を実行
     return `y = A \\sin(${omega} ${isBlue ? `-${phaseDiff}` : ''}) 
     　⇔　y=${radius.toFixed(0)} \\sin(${numericOmega} ${isBlue ? `-${numericPhaseDiff}π` : ''}) `
   }
