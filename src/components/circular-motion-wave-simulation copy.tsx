@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { InlineMath, BlockMath } from 'react-katex'
@@ -6,11 +8,11 @@ import 'katex/dist/katex.min.css'
 export function CircularMotionWaveSimulationComponent() {
   const [period, setPeriod] = useState(4) // 周期（秒）
   const [radius, setRadius] = useState(80)
-  const [numPoints, setNumPoints] = useState(24)
+  const [numPoints, setNumPoints] = useState(20)
   const [time, setTime] = useState(0)
   const [isRunning, setIsRunning] = useState(true)
   const [selectedPoint, setSelectedPoint] = useState<number | null>(null)
-  const [modeState, setModeState] = useState('compare') // 'compare', 'rainbow', 'simpleVibration'
+  const [isCompareMode, setIsCompareMode] = useState(true)
   const [svgSize, setSvgSize] = useState(0)
   const [thetaDeg, setThetaDeg] = useState("0")
   const [rotationAngle, setRotationAngle] = useState(90)
@@ -47,6 +49,7 @@ export function CircularMotionWaveSimulationComponent() {
       y: y
     }
   }
+ 
 
   const getAngleCoordinates = (angle: number, radius: number) => {
     const x = radius * Math.cos(angle)
@@ -60,31 +63,24 @@ export function CircularMotionWaveSimulationComponent() {
   }
 
   const getColor = (index: number) => {
-    if (modeState === 'compare') {
+    if (isCompareMode) {
       if (index === 0) return '#FF4136' // より鮮やかな赤
       if (index === selectedPoint) return '#0074D9' // より鮮やかな青
       return '#AAAAAA' // より明るいグレー
-    } else if (modeState === 'rainbow') {
-      const hue = (index / numPoints) * 360
-      return `hsl(${hue}, 100%, 45%)` // 彩度を下げて少し暗く
-    } else if (modeState === 'simpleVibration') {
-      if (index === 0) return '#FF4136' // より鮮やかな赤
-      return '#AAAAAA' // より明るいグレー // 単振動モードでは赤色
     }
+    const hue = (index / numPoints) * 360
+    return `hsl(${hue}, 100%, 45%)` // 彩度を下げて少し暗く
   }
 
   const getPointSize = (index: number , start : boolean) => {
-    if (modeState === 'compare') {
+    if (isCompareMode) {
       if (index === 0 && start === true) return 9 // 赤色の点を1.5倍に
       if (index === selectedPoint && start === true) return 9 // 選択された点も大きく
       return 1.5 // その他の点は小さく
-    } else if (modeState === 'rainbow') {
-      const size = 9 - (index / numPoints) * 6 // 9から3の間で変化
-      return Math.max(size, 3) // 最小サイズを3に設定
-    } else if (modeState === 'simpleVibration') {
-      if (index === 0 && start === true) return 9 
-      return 1.5 // 単振動モードでは固定サイズ
     }
+    // 通常モード: インデックスに基づいて大きさを変える
+    const size = 9 - (index / numPoints) * 6 // 9から3の間で変化
+    return Math.max(size, 3) // 最小サイズを3に設定
   }
 
   const getEquation = (index: number) => {
@@ -93,7 +89,7 @@ export function CircularMotionWaveSimulationComponent() {
   }
 
   const togglePoint = (index: number) => {
-    if (modeState !== 'compare' || index === 0) return
+    if (!isCompareMode || index === 0) return
     setSelectedPoint(prev => prev === index ? null : index)
   }
 
@@ -123,86 +119,115 @@ export function CircularMotionWaveSimulationComponent() {
     const omega = `2\\pi\\frac{t}{T}`
     const phaseDiff = isBlue ? `2\\pi\\frac{x}{\\lambda}` : ''
     const numericOmega = `${((time / period * 2) % period).toFixed(1)}π`
-    const numericPhaseDiff = isBlue ? ((selectedPoint ?? 0) / numPoints * 2).toFixed(1) : '0';
+    const numericPhaseDiff = isBlue ? ((selectedPoint ?? 0) / numPoints * 2).toFixed(1) : '0'; // null チェック後に計算を実行
     return `y = A \\sin(${omega} ${isBlue ? `-${phaseDiff}` : ''}) 
     \\quad ⇔\\quad y=${radius.toFixed(0)} \\sin(${numericOmega} ${isBlue ? `-${numericPhaseDiff}π` : ''}) `
   }
 
+  
   const calculatePoints = (numPoints: number, time: number, period: number, radius: number, rotationAngle: number, offsetPeriod: number) => {
     return Array.from({ length: numPoints }, (_, i) => {
       const delay = (i / numPoints) * period;
       const effectiveTime = time > delay + offsetPeriod ? time - delay : 0;
-
+  
       const angle = effectiveTime > 0
         ? -(effectiveTime / period) * 2 * Math.PI
         : 0;
-
+  
       const x = radius * Math.cos(angle);
       const y = radius * Math.sin(angle);
       const rotated = getRotatedCoordinates(x, y, rotationAngle);
-
+  
       return { x: rotated.x, y: rotated.y, angle };
     });
   };
-
+  
   // points1 と points2 を計算
   const points1 = calculatePoints(numPoints, time, period, radius, rotationAngle, 0);
   const points2 = calculatePoints(numPoints, time, period, radius, rotationAngle, period);
+    
+  // 描画処理
+  {[points1, points2].map((points, index) => (
+    points.map((point, i) => (
+      <circle
+        key={`${index}-${i}`} // index を加えることで key の重複を防ぐ
+        cx={`${3 + (index === 0 ? 0 : 50) + (i / numPoints) * 50}%`}
+        cy={`${50 + (point.y / svgSize * 100)}%`}
+        r={getPointSize(i, index === 0)}
+        fill={getColor(i)}
+      />
+    ))
+  ))}
+  
+
 
   return (
     <div className="p-4 max-w-4xl mx-auto bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800">
       <h1 className="text-2xl font-bold mb-4 text-gray-900">単振動と波動のシミュレーション</h1>
       <div className="flex items-center space-x-2 mt-6 bg-white p-4 rounded-lg shadow">
-        <label className="flex items-center ml-4">
-          <input
-            type="radio"
-            name="mode"
-            value="simpleVibration"
-            checked={modeState === 'simpleVibration'}
-            onChange={() => {
-              setModeState('simpleVibration');
-              setSelectedPoint(null);
-            }}
-            className="mr-2 accent-indigo-600"
-          />
-          <span className="text-gray-700">単振動モード　</span>
-        </label>
-
         <label className="flex items-center">
           <input
             type="radio"
             name="mode"
             value="compare"
-            checked={modeState === 'compare'}
+            checked={isCompareMode}
             onChange={() => {
-              setModeState('compare');
-              setSelectedPoint(null);
+              setIsCompareMode(true);
+              setSelectedPoint(null); // 位相比較モードのとき、選択をリセット
             }}
             className="mr-2 accent-indigo-600"
           />
           <span className="text-gray-700">位相比較モード　</span>
         </label>
+        
+
+
 
         <label className="flex items-center ml-4">
           <input
             type="radio"
             name="mode"
             value="rainbow"
-            checked={modeState === 'rainbow'}
+            checked={!isCompareMode}
             onChange={() => {
-              setModeState('rainbow');
-              setSelectedPoint(null);
+              setIsCompareMode(false);
+              setSelectedPoint(null); // 虹色モードのとき、選択をリセット
             }}
             className="mr-2 accent-indigo-600"
           />
           <span className="text-gray-700">虹色モード　</span>
         </label>
+
       </div>
 
+      {isCompareMode && (
+        <div className="mt-6 bg-white p-4 rounded-lg shadow">
+          <h2 className="text-xl font-bold mb-4 text-gray-800">位相の比較</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+            {Array.from({ length: numPoints }).map((_, i) => (
+              i !== 0 &&  i % 2 == 0 && (
+                <div key={i} className="flex items-center">
+                  <input
+                    type="radio"
+                    id={`point-${i}`}
+                    checked={selectedPoint === i}
+                    onChange={() => togglePoint(i)}
+                    className="mr-2 accent-indigo-600"
+                  />
+                  <label htmlFor={`point-${i}`} className={`${i === selectedPoint ? 'text-blue-600' : 'text-gray-600'} cursor-pointer`}>
+                    {i}
+                  </label>
+                </div>
+              )
+            ))}
+          </div>
+          </div>
+      )}
+      
       <br />
 
       <div className="flex flex-col md:flex-row mb-8 space-y-6 md:space-y-0 md:space-x-6">
-        <div ref={circularMotionRef} className="w-full md:w-1/2 aspect-square relative border border-gray-300 rounded-lg shadow-md bg-white">
+      <div ref={circularMotionRef} className="w-full md:w-1/2 aspect-square relative border border-gray-300 rounded-lg shadow-md bg-white">
           <svg className="w-full h-full">
             <ellipse 
               cx="50%" 
@@ -224,7 +249,7 @@ export function CircularMotionWaveSimulationComponent() {
               strokeWidth="1" 
               strokeDasharray="2 4" 
             />
-            {modeState === 'compare' && selectedPoint !== null && (
+            {isCompareMode && selectedPoint !== null && (
               <line 
                 x1="0" 
                 y1={`calc(50% + ${(points1[selectedPoint].y / svgSize * 100)}%)`} 
@@ -238,7 +263,7 @@ export function CircularMotionWaveSimulationComponent() {
             
             {/* 赤色の角度表示 (0度の時のみ) */}
             {rotationAngle === 0 && (
-              <path
+              <path     //
                 d={`
                   M ${svgSize / 2} ${svgSize / 2} 
                   L ${svgSize / 2 + radius / 10} ${svgSize / 2} 
@@ -269,7 +294,7 @@ export function CircularMotionWaveSimulationComponent() {
             )}
 
             {/* 青い点と赤い点を結ぶ扇形の円弧（位相差） */}
-            {rotationAngle === 0 && modeState === 'compare' && selectedPoint !== null && (
+            {rotationAngle === 0 && isCompareMode && selectedPoint !== null && (
               <>
                 <path
                   d={`
@@ -327,7 +352,7 @@ export function CircularMotionWaveSimulationComponent() {
           </svg>          
         </div> 
         <div className="w-full md:w-1/2 aspect-square relative border border-gray-300 rounded-lg shadow-md bg-white">
-          <svg className="w-full h-full">
+        <svg className="w-full h-full">
             {/* Add horizontal guide line */}
             <line 
               x1="0" 
@@ -338,7 +363,7 @@ export function CircularMotionWaveSimulationComponent() {
               strokeWidth="1" 
               strokeDasharray="2 4" 
             />
-            {modeState === 'compare' && selectedPoint !== null && (
+            {isCompareMode && selectedPoint !== null && (
               <line 
                 x1="0" 
                 y1={`calc(50% + ${(points1[selectedPoint].y / svgSize * 100)}%)`} 
@@ -352,7 +377,7 @@ export function CircularMotionWaveSimulationComponent() {
 
             {points1.map((point, i) => (
               <circle
-                key={`1-${i}`}
+                key={i}
                 cx={`${3 +(i / numPoints) * 50}%`}
                 cy={`${50 + (point.y / svgSize * 100)}%`}
                 r={getPointSize(i , true)}
@@ -361,7 +386,7 @@ export function CircularMotionWaveSimulationComponent() {
             ))}
             {points2.map((point, i) => (
               <circle
-                key={`2-${i}`}
+                key={i}
                 cx={`${53 +(i / numPoints) * 50}%`}
                 cy={`${50 + (point.y / svgSize * 100)}%`}
                 r={getPointSize(i , false)}
@@ -370,56 +395,16 @@ export function CircularMotionWaveSimulationComponent() {
             ))}
           </svg>
           <div className="absolute bottom-0 left-0 w-full h-6 flex justify-between px-2 text-gray-600">
-            {Array.from({ length: 5 }).map((_, i) => (
+                     {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="text-xs">{i * (numPoints / 4)}</div>
             ))}
           </div>
         </div>
       </div>
 
-        
-      {modeState === 'compare' && (
-        <div className="mt-6 bg-white p-4 rounded-lg shadow">
-
-          <label className="text-xl font-bold mb-1 text-gray-800 flex items-center">
-          <input
-            type="checkbox"
-            name="mode"
-            value="compare"
-            checked={modeState === 'compare'}
-            onChange={() => {
-              setModeState('compare');
-              setSelectedPoint(null);
-            }}
-            className="mr-2 accent-indigo-600"
-          />
-          <span className="text-gray-700">位相比較モード　</span>
-        </label>
-
-          <div className="grid sm:grid-cols-3 md:grid-cols-6 gap-4">
-            {Array.from({ length: numPoints }).map((_, i) => (
-              i !== 0 &&  i % 4 === 0 && (
-                <div key={i} className="flex items-center">
-                  <input
-                    type="radio"
-                    id={`point-${i}`}
-                    checked={selectedPoint === i}
-                    onChange={() => togglePoint(i)}
-                    className="mr-2 accent-indigo-600"
-                  />
-                  <label htmlFor={`point-${i}`} className={`${i === selectedPoint ? 'text-blue-600' : 'text-gray-600'} cursor-pointer`}>
-                    {(i/numPoints * 360).toFixed(0)}°
-                  </label>
-                </div>
-              )
-            ))}
-          </div>
-        </div>
-      )}
-
 
       <div className="flex flex-wrap items-center space-x-4 space-y-2 mb-6">
-        <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2">
           <label className="text-gray-700">周期 : T= {period.toFixed(1)} 秒 </label>
           <button onClick={() => setPeriod(p => Math.min(p + 0.5, 10))} className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-150">+</button>
           <button onClick={() => setPeriod(p => Math.max(p - 0.5, 1))} className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-150">-</button>
@@ -431,7 +416,7 @@ export function CircularMotionWaveSimulationComponent() {
         </div>
         <div className="flex items-center space-x-2">
           <label className="text-gray-700">点の数: {numPoints}</label>
-          <button onClick={() => setNumPoints(n => Math.min(n + 8, 48))} className="px-3 py-1 bg-purple-500 text-white rounded hover:bg-purple-600 transition duration-150">+</button>
+          <button onClick={() => setNumPoints(n => Math.min(n + 8, 120))} className="px-3 py-1 bg-purple-500 text-white rounded hover:bg-purple-600 transition duration-150">+</button>
           <button onClick={() => setNumPoints(n => Math.max(n - 8, 8))} className="px-3 py-1 bg-purple-500 text-white rounded hover:bg-purple-600 transition duration-150">-</button>
         </div>
         <div className="flex items-center space-x-2">
@@ -447,6 +432,7 @@ export function CircularMotionWaveSimulationComponent() {
         </div>
       </div>
 
+      
       <div className="space-y-4 bg-white p-4 rounded-lg shadow">
         <div className="flex items-center space-x-4">
           <button
@@ -477,7 +463,6 @@ export function CircularMotionWaveSimulationComponent() {
             Time: {time.toFixed(1)}s <InlineMath math={timeInPeriodFraction()} />
           </span>
         </div>
-
         <div className="text-gray-800">
           赤色の位相：  <InlineMath math={thetaEquation()} />
         </div>
@@ -485,7 +470,7 @@ export function CircularMotionWaveSimulationComponent() {
           <div className="text-red-600">
             赤色の変位： <InlineMath math={displacementEquation()} />
           </div>
-          {modeState === 'compare' && selectedPoint !== null && (
+          {isCompareMode && selectedPoint !== null && (
             <div className="text-blue-600 mt-2">
               青色の変位： <InlineMath math={displacementEquation(true)} />
               <div className="mt-2 text-gray-700">
@@ -495,10 +480,7 @@ export function CircularMotionWaveSimulationComponent() {
             </div>
           )}
         </div>
-
-
-        
       </div>
     </div>
   )
-}
+}         
