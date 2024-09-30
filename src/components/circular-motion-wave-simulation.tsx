@@ -10,7 +10,7 @@ export function CircularMotionWaveSimulationComponent() {
   const [time, setTime] = useState(0)
   const [isRunning, setIsRunning] = useState(true)
   const [selectedPoint, setSelectedPoint] = useState<number | null>(null)
-  const [modeState, setModeState] = useState('compare') // 'compare', 'rainbow', 'simpleVibration'
+  const [modeState, setModeState] = useState<"" | "compare" | "rainbow" | "simplePosition" | "simpleVelocity" | "simpleAcceleration">('compare') // 'compare', 'rainbow', 'simpleVelosity" , "simplePosition , simpleAcceleration'
   const [svgSize, setSvgSize] = useState(0)
   const [thetaDeg, setThetaDeg] = useState("0")
   const [rotationAngle, setRotationAngle] = useState(90)
@@ -67,7 +67,7 @@ export function CircularMotionWaveSimulationComponent() {
     } else if (modeState === 'rainbow') {
       const hue = (index / numPoints) * 360
       return `hsl(${hue}, 100%, 45%)` // 彩度を下げて少し暗く
-    } else if (modeState === 'simpleVibration') {
+    } else if (modeState === "simpleAcceleration" || modeState ==="simplePosition" || modeState==="simpleVelocity") {
       if (index === 0) return '#FF4136' // より鮮やかな赤
       return '#AAAAAA' // より明るいグレー // 単振動モードでは赤色
     }
@@ -81,7 +81,7 @@ export function CircularMotionWaveSimulationComponent() {
     } else if (modeState === 'rainbow') {
       const size = 9 - (index / numPoints) * 6 // 9から3の間で変化
       return Math.max(size, 3) // 最小サイズを3に設定
-    } else if (modeState === 'simpleVibration') {
+    } else if (modeState === "simpleAcceleration" || modeState ==="simplePosition" || modeState==="simpleVelocity"){
       if (index === 0 && start === true) return 9 
       return 1.5 // 単振動モードでは固定サイズ
     }
@@ -149,18 +149,45 @@ export function CircularMotionWaveSimulationComponent() {
   const points1 = calculatePoints(numPoints, time, period, radius, rotationAngle, 0);
   const points2 = calculatePoints(numPoints, time, period, radius, rotationAngle, period);
 
+  // 単振動モードのための速度と加速度の計算
+  const calculateVelocityAndAcceleration = () => {
+    const omega = (2 * Math.PI) / period;
+    const angle = -(time / period) * 2 * Math.PI;
+    const v_x =  omega * radius * Math.sin(angle);
+    const v_y =  omega * radius * Math.cos(angle);
+    const a_x = -omega * omega * radius * Math.cos(angle);
+    const a_y = -omega * omega * radius * Math.sin(angle);
+
+    // 回転角度の考慮
+    const rotatedVelocity = getRotatedCoordinates(v_x, v_y, rotationAngle);
+    const rotatedAcceleration = getRotatedCoordinates(a_x, a_y, rotationAngle);
+
+    return {
+      velocity: rotatedVelocity,
+      acceleration: rotatedAcceleration,
+    };
+  };
+
+  // 速度と加速度のベクトルを取得
+  const { velocity, acceleration } = calculateVelocityAndAcceleration();
+
   return (
     <div className="p-4 max-w-4xl mx-auto bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800">
       <h1 className="text-2xl font-bold mb-4 text-gray-900">単振動と波動のシミュレーション</h1>
+
+
+
+
+
       <div className="flex items-center space-x-2 mt-6 bg-white p-4 rounded-lg shadow">
         <label className="flex items-center ml-4">
           <input
             type="radio"
             name="mode"
             value="simpleVibration"
-            checked={modeState === 'simpleVibration'}
+            checked={modeState === "simplePosition"}
             onChange={() => {
-              setModeState('simpleVibration');
+              setModeState("simplePosition");
               setSelectedPoint(null);
             }}
             className="mr-2 accent-indigo-600"
@@ -198,8 +225,45 @@ export function CircularMotionWaveSimulationComponent() {
           <span className="text-gray-700">虹色モード　</span>
         </label>
       </div>
-
       <br />
+
+
+
+      {/* 単振動モードのときにのみ表示されるチェックボックス */}
+      {(modeState === "simpleAcceleration" || modeState ==="simplePosition" || modeState==="simpleVelocity") && (
+        <div className="flex items-center space-x-4 mb-4 bg-white p-4 rounded-lg shadow">
+
+        <label className="flex items-center">
+            <input
+              type="radio"
+              checked={modeState==="simplePosition"}
+              onChange={() => setModeState("simplePosition")}
+              className="mr-2 accent-indigo-600"
+            />
+            <span className="text-gray-700">変位を表示</span>
+          </label>        
+          <label className="flex items-center">
+            <input
+              type="radio"
+              checked={modeState==="simpleVelocity"}
+              onChange={() => setModeState("simpleVelocity")}
+              className="mr-2 accent-indigo-600"
+            />
+            <span className="text-gray-700">速度ベクトルを表示</span>
+          </label>
+          <label className="flex items-center">
+            <input
+              type="radio"
+              checked={modeState==="simpleAcceleration"}
+              onChange={() => setModeState("simpleAcceleration")}
+              className="mr-2 accent-indigo-600"
+            />
+            <span className="text-gray-700">加速度ベクトルを表示</span>
+          </label>
+
+        </div>
+      )}
+
 
       <div className="flex flex-col md:flex-row mb-8 space-y-6 md:space-y-0 md:space-x-6">
         <div ref={circularMotionRef} className="w-full md:w-1/2 aspect-square relative border border-gray-300 rounded-lg shadow-md bg-white">
@@ -214,7 +278,8 @@ export function CircularMotionWaveSimulationComponent() {
               fill="none" 
             />
             
-            {/* Add horizontal guide line */}
+            {/* 赤色の水平線 */}
+            { !(modeState === "simpleAcceleration" || modeState ==="simpleVelocity") && (
             <line 
               x1="0" 
               y1={`calc(50% + ${(points1[0].y / svgSize * 100)}%)`} 
@@ -224,6 +289,7 @@ export function CircularMotionWaveSimulationComponent() {
               strokeWidth="1" 
               strokeDasharray="2 4" 
             />
+          )}
             {modeState === 'compare' && selectedPoint !== null && (
               <line 
                 x1="0" 
@@ -235,7 +301,8 @@ export function CircularMotionWaveSimulationComponent() {
                 strokeDasharray="2 4" 
               />
             )}
-            
+         
+
             {/* 赤色の角度表示 (0度の時のみ) */}
             {rotationAngle === 0 && (
               <path
@@ -324,11 +391,58 @@ export function CircularMotionWaveSimulationComponent() {
                 />
               </g>
             ))}
+
+            {/* 単振動モードで速度と加速度のベクトルを表示 */}
+            {(modeState === "simpleAcceleration" || modeState ==="simplePosition" || modeState==="simpleVelocity") && (
+              <>
+                {/* 速度ベクトル */}
+                {modeState==="simpleVelocity" && (
+                  <line
+                    x1={`${50 + (points1[0].x / svgSize * 100)}%`}
+                    y1={`${50 + (points1[0].y / svgSize * 100)}%`}
+                    x2={`${50 + ((points1[0].x + velocity.x * 0.3) / svgSize * 100)}%`}
+                    y2={`${50 + ((points1[0].y - velocity.y * 0.3) / svgSize * 100)}%`}
+                    stroke="green"
+                    strokeWidth="1.5"
+                    markerEnd="url(#arrowhead)"
+                  />
+                )}
+                {/* 加速度ベクトル */}
+                {modeState==="simpleAcceleration" && (
+                  <line
+                    x1={`${50 + (points1[0].x / svgSize * 100)}%`}
+                    y1={`${50 + (points1[0].y / svgSize * 100)}%`}
+                    x2={`${50 + ((points1[0].x + acceleration.x * 0.3) / svgSize * 100)}%`}
+                    y2={`${50 + ((points1[0].y + acceleration.y * 0.3) / svgSize * 100)}%`}
+                    stroke="blue"
+                    strokeWidth="1.5"
+                    markerEnd="url(#arrowhead)"
+                  />
+                )}
+                {/* 矢印の定義 */}
+                <defs>
+                  <marker
+                    id="arrowhead"
+                    markerWidth="10"
+                    markerHeight="7"
+                    refX="0"
+                    refY="3.5"
+                    orient="auto"
+                  >
+                    <polygon points="0 0, 10 3.5, 0 7" fill="currentColor" />
+                  </marker>
+                </defs>
+              </>
+            )}
           </svg>          
         </div> 
+
+
+        {(modeState === "compare" || modeState ==="rainbow") && (
         <div className="w-full md:w-1/2 aspect-square relative border border-gray-300 rounded-lg shadow-md bg-white">
           <svg className="w-full h-full">
             {/* Add horizontal guide line */}
+            
             <line 
               x1="0" 
               y1={`calc(50% + ${(points1[0].y / svgSize * 100)}%)`} 
@@ -375,9 +489,31 @@ export function CircularMotionWaveSimulationComponent() {
             ))}
           </div>
         </div>
+        )}
+        
+        {(modeState === "simpleAcceleration" || modeState ==="simplePosition" || modeState==="simpleVelocity") && (
+        <div className="w-full md:w-1/2 aspect-square relative border border-gray-300 rounded-lg shadow-md bg-white">
+          <svg className="w-full h-full">
+            {/* Add horizontal guide line */}
+            <line 
+              x1="0" 
+              y1={`calc(50% + ${(points1[0].y / svgSize * 100)}%)`} 
+              x2="100%" 
+              y2={`calc(50% + ${(points1[0].y / svgSize * 100)}%)`} 
+              stroke="#FF4136" 
+              strokeWidth="1" 
+              strokeDasharray="2 4" 
+            />
+          </svg>
+          <div className="absolute bottom-0 left-0 w-full h-6 flex justify-between px-2 text-gray-600">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="text-xs">{i * (numPoints / 4)}</div>
+            ))}
+          </div>
+        </div>
+        )}
       </div>
 
-        
       {modeState === 'compare' && (
         <div className="mt-6 bg-white p-4 rounded-lg shadow">
 
@@ -416,7 +552,6 @@ export function CircularMotionWaveSimulationComponent() {
           </div>
         </div>
       )}
-
 
       <div className="flex flex-wrap items-center space-x-4 space-y-2 mb-6">
         <div className="flex items-center space-x-2">
@@ -495,9 +630,6 @@ export function CircularMotionWaveSimulationComponent() {
             </div>
           )}
         </div>
-
-
-        
       </div>
     </div>
   )
