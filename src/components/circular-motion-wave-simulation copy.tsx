@@ -17,9 +17,6 @@ export function CircularMotionWaveSimulationComponent() {
   const [rotationAngle, setRotationAngle] = useState(90); // 回転角度
   const circularMotionRef = useRef<HTMLDivElement>(null); // コンポーネントの参照
 
-  // 新たに追加したStateとRef
-  const [plottedPoints, setPlottedPoints] = useState<{ time: number; value: number }[]>([]);
-  const prevTimeRef = useRef(time);
 
   // サイズの更新
   useEffect(() => {
@@ -41,7 +38,7 @@ export function CircularMotionWaveSimulationComponent() {
     let timer: NodeJS.Timeout;
     if (isRunning) {
       timer = setInterval(() => {
-        setTime((t) => (t + 0.02) % (3 * period));
+        setTime((t) => (t + 0.02) % (4 * period));
       }, 50);
     }
     return () => clearInterval(timer);
@@ -88,7 +85,7 @@ export function CircularMotionWaveSimulationComponent() {
       return Math.max(size, 3) // 最小サイズを3に設定
     } else if (modeState === "simpleAcceleration" || modeState ==="simplePosition" || modeState==="simpleVelocity"){
       if (index === 0 && start === true) return 9 
-      return 0 // 単振動モードでは固定サイズ
+      return 1.5 // 単振動モードでは固定サイズ
     }
   }
 
@@ -133,18 +130,18 @@ export function CircularMotionWaveSimulationComponent() {
     \\quad ⇔\\quad y=${radius.toFixed(0)} \\sin(${numericOmega} ${isBlue ? `-${numericPhaseDiff}π` : ''}) `
   }
 
-  // 点の計算
-  const calculatePoints = (numPoints: number, time: number, period: number, radius: number, rotationAngle: number, offsetPeriod: number) => {
-    return Array.from({ length: numPoints }, (_, i) => {
-      const delay = (i / numPoints) * period;
-      const effectiveTime = time > delay + offsetPeriod ? time - delay : 0;
-      const angle = effectiveTime > 0 ? -(effectiveTime / period) * 2 * Math.PI : 0;
-      const x = radius * Math.cos(angle);
-      const y = radius * Math.sin(angle);
-      const rotated = getRotatedCoordinates(x, y, rotationAngle);
-      return { x: rotated.x, y: rotated.y, angle };
-    });
-  };
+// 点の計算
+const calculatePoints = (numPoints: number, time: number, period: number, radius: number, rotationAngle: number, offsetPeriod: number) => {
+  return Array.from({ length: numPoints }, (_, i) => {
+    const delay = (i / numPoints) * period;
+    const effectiveTime = time > delay + offsetPeriod ? time - delay : 0;
+    const angle = effectiveTime > 0 ? -(effectiveTime / period) * 2 * Math.PI : 0;
+    const x = radius * Math.cos(angle);
+    const y = radius * Math.sin(angle);
+    const rotated = getRotatedCoordinates(x, y, rotationAngle);
+    return { x: rotated.x, y: rotated.y, angle };
+  });
+};
 
   // points1 と points2 を計算
   const points1 = calculatePoints(numPoints, time, period, radius, rotationAngle, 0);
@@ -168,78 +165,16 @@ export function CircularMotionWaveSimulationComponent() {
   // 速度と加速度のベクトルを取得
   const { velocity, acceleration } = calculateVelocityAndAcceleration();
 
-  // 最大値の計算（グラフのスケーリングに使用）
-  const omega = (2 * Math.PI) / period;
-
-
-
-  // 現在の値の計算
-  const currentValue = (() => {
-    if (modeState === "simplePosition") {
-      return points1[0].y;
-    } else if (modeState === "simpleVelocity") {
-      return velocity.y;
-    } else if (modeState === "simpleAcceleration") {
-      return acceleration.y;
-    } else {
-      return 0;
-    }
-  })();
-
-  // プロットされた点を更新
-  useEffect(() => {
-    if (time < prevTimeRef.current) {
-      // 時間がリセットされた場合、プロットされた点をリセット
-      setPlottedPoints([]);
-    }
-    prevTimeRef.current = time;
-
-    const interval = period / 32;
-    const numIntervals = Math.floor((time + 0.0001) / interval);
-
-    if (numIntervals > plottedPoints.length) {
-      let value:number;
-      if (modeState === "simplePosition") {
-        value = points1[0].y;
-      } else if (modeState === "simpleVelocity") {
-        value = velocity.y;
-      } else if (modeState === "simpleAcceleration") {
-        value = acceleration.y;
-      }
-
-      setPlottedPoints(prev => [...prev, { time, value }]);
-    }
-  }, [time, period, plottedPoints.length, modeState, points1, velocity, acceleration]);
-
-  // プロットする点を計算
-  const maxValue = (() => {
-    if (modeState === "simplePosition") {
-      return radius;
-    } else if (modeState === "simpleVelocity") {
-      return - omega * radius;
-    } else if (modeState === "simpleAcceleration") {
-      return omega * omega * radius;
-    } else {
-      return 1; // デフォルト値
-    }
-  })();
-  
-  const plotPoints = plottedPoints.map(point => {
-    const x = 5 + (point.time / (3 * period)) * 90;
-    let y : number
-    if (modeState === "simplePosition") {
-     y = 50 + (point.value / Math.abs(maxValue)) * radius / svgSize * 100;
-    }else{
-     y = 50 + (point.value / Math.abs(maxValue)) * maxValue * 0.2 / svgSize * 100;     
-    }
-    return { x, y };
-  });
 
 
 
   return (
     <div className="p-4 max-w-4xl mx-auto bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800">
       <h1 className="text-2xl font-bold mb-4 text-gray-900">単振動と波動のシミュレーション</h1>
+
+
+
+
 
       <div className="flex items-center space-x-2 mt-6 bg-white p-4 rounded-lg shadow">
         <label className="flex items-center ml-4">
@@ -251,7 +186,6 @@ export function CircularMotionWaveSimulationComponent() {
             onChange={() => {
               setModeState("simplePosition");
               setSelectedPoint(null);
-              setPlottedPoints([]); // プロットをリセット
             }}
             className="mr-2 accent-indigo-600"
           />
@@ -267,7 +201,6 @@ export function CircularMotionWaveSimulationComponent() {
             onChange={() => {
               setModeState('compare');
               setSelectedPoint(null);
-              setPlottedPoints([]); // プロットをリセット
             }}
             className="mr-2 accent-indigo-600"
           />
@@ -283,7 +216,6 @@ export function CircularMotionWaveSimulationComponent() {
             onChange={() => {
               setModeState('rainbow');
               setSelectedPoint(null);
-              setPlottedPoints([]); // プロットをリセット
             }}
             className="mr-2 accent-indigo-600"
           />
@@ -292,19 +224,17 @@ export function CircularMotionWaveSimulationComponent() {
       </div>
       <br />
 
+
+
       {/* 単振動モードのときにのみ表示されるチェックボックス */}
       {(modeState === "simpleAcceleration" || modeState ==="simplePosition" || modeState==="simpleVelocity") && (
         <div className="flex items-center space-x-4 mb-4 bg-white p-4 rounded-lg shadow">
 
-          <label className="flex items-center">
+        <label className="flex items-center">
             <input
               type="radio"
               checked={modeState==="simplePosition"}
-              onChange={() => {
-                setModeState("simplePosition");
-                setTime(0);
-                setPlottedPoints([]); // プロットをリセット
-              }}
+              onChange={() => setModeState("simplePosition")}
               className="mr-2 accent-indigo-600"
             />
             <span className="text-gray-700">変位を表示</span>
@@ -313,11 +243,7 @@ export function CircularMotionWaveSimulationComponent() {
             <input
               type="radio"
               checked={modeState==="simpleVelocity"}
-              onChange={() => {
-                setModeState("simpleVelocity");
-                setTime(0);
-                setPlottedPoints([]); // プロットをリセット
-              }}
+              onChange={() => setModeState("simpleVelocity")}
               className="mr-2 accent-indigo-600"
             />
             <span className="text-gray-700">速度ベクトルを表示</span>
@@ -326,11 +252,7 @@ export function CircularMotionWaveSimulationComponent() {
             <input
               type="radio"
               checked={modeState==="simpleAcceleration"}
-              onChange={() => {
-                setModeState("simpleAcceleration");
-                setTime(0);
-                setPlottedPoints([]); // プロットをリセット
-              }}
+              onChange={() => setModeState("simpleAcceleration")}
               className="mr-2 accent-indigo-600"
             />
             <span className="text-gray-700">加速度ベクトルを表示</span>
@@ -338,6 +260,7 @@ export function CircularMotionWaveSimulationComponent() {
 
         </div>
       )}
+
 
       <div className="flex flex-col md:flex-row mb-8 space-y-6 md:space-y-0 md:space-x-6">
         <div ref={circularMotionRef} className="w-full md:w-1/2 aspect-square relative border border-gray-300 rounded-lg shadow-md bg-white">
@@ -375,30 +298,7 @@ export function CircularMotionWaveSimulationComponent() {
                 strokeDasharray="2 4" 
               />
             )}
-            {points1.map((point, i) => (
-              <g key={i}>
-                {(i === 0 || i === selectedPoint) && (
-                  <line
-                    x1="50%"
-                    y1="50%"
-                    x2={`${50 + (point.x / svgSize * 100)}%`}
-                    y2={`${50 + (point.y / svgSize * 100)}%`}
-                    stroke={getColor(i)}
-                    strokeWidth={i === 0 ? "1" : "0.5"}
-                  />
-                )}
-                <circle
-                  cx={`${50 + (point.x / svgSize * 100)}%`}
-                  cy={`${50 + (point.y / svgSize * 100)}%`}
-                  r={getPointSize(i ,true)}
-                  fill={getColor(i)}
-                  onClick={() => togglePoint(i)}
-                  style={{ cursor: 'pointer' }}
-                />
-              </g>
-            ))}
-
-
+         
 
             {/* 赤色の角度表示 (0度の時のみ) */}
             {rotationAngle === 0 && (
@@ -417,8 +317,9 @@ export function CircularMotionWaveSimulationComponent() {
                 strokeWidth="2"
               />
             )}
-                        {/* 赤色のθ表示 */}
-                        {rotationAngle === 0   && (
+
+            {/* 赤色のθ表示 */}
+            {rotationAngle === 0   && (
               <text
                 x={svgSize / 1.75}
                 y={svgSize / 1.8}
@@ -430,7 +331,6 @@ export function CircularMotionWaveSimulationComponent() {
                 θ= {thetaDeg}°
               </text>
             )}
-
 
             {/* 青い点と赤い点を結ぶ扇形の円弧（位相差） */}
             {rotationAngle === 0 && modeState === 'compare' && selectedPoint !== null && (
@@ -466,7 +366,28 @@ export function CircularMotionWaveSimulationComponent() {
               </>
             )}
 
-
+            {points1.map((point, i) => (
+              <g key={i}>
+                {(i === 0 || i === selectedPoint) && (
+                  <line
+                    x1="50%"
+                    y1="50%"
+                    x2={`${50 + (point.x / svgSize * 100)}%`}
+                    y2={`${50 + (point.y / svgSize * 100)}%`}
+                    stroke={getColor(i)}
+                    strokeWidth={i === 0 ? "1" : "0.5"}
+                  />
+                )}
+                <circle
+                  cx={`${50 + (point.x / svgSize * 100)}%`}
+                  cy={`${50 + (point.y / svgSize * 100)}%`}
+                  r={getPointSize(i ,true)}
+                  fill={getColor(i)}
+                  onClick={() => togglePoint(i)}
+                  style={{ cursor: 'pointer' }}
+                />
+              </g>
+            ))}
 
             {/* 単振動モードで速度と加速度のベクトルを表示 */}
             {(modeState === "simpleAcceleration" || modeState ==="simplePosition" || modeState==="simpleVelocity") && (
@@ -483,8 +404,6 @@ export function CircularMotionWaveSimulationComponent() {
                     markerEnd="url(#arrowhead)"
                   />
                 )}
-
-
                 {/* 加速度ベクトル */}
                 {modeState==="simpleAcceleration" && (
                   <line
@@ -497,9 +416,6 @@ export function CircularMotionWaveSimulationComponent() {
                     markerEnd="url(#arrowhead)"
                   />
                 )}
-
-
-
                 {/* 矢印の定義 */}
                 <defs>
                   <marker
@@ -518,32 +434,65 @@ export function CircularMotionWaveSimulationComponent() {
           </svg>          
         </div> 
 
-        {/* 単振動モードのグラフ表示 */}
-        {(modeState ==="simplePosition" ||  modeState==="simpleVelocity"|| modeState === "simpleAcceleration")  && (
-          <div className="w-full md:w-1/2 aspect-square relative border border-gray-300 rounded-lg shadow-md bg-white">
-            <svg className="w-full h-full">
-              {/* グラフの縦軸と横軸 */}
-                {/* 横軸 */}
-                <line 
-                  x1="5%" 
-                  y1="50%" 
-                  x2="95%" 
-                  y2="50%" 
-                  stroke="black" 
-                  strokeWidth="1" 
-                />
 
-                {/* 縦軸 */}
-                <line 
-                  x1="5%" 
-                  y1="5%" 
-                  x2="5%" 
-                  y2="95%" 
-                  stroke="black" 
-                  strokeWidth="1" 
-                />
-            {/* 赤色の水平線 */}
-            { !(modeState === "simpleAcceleration" || modeState ==="simpleVelocity") && (
+        {(modeState === "compare" || modeState ==="rainbow") && (
+        <div className="w-full md:w-1/2 aspect-square relative border border-gray-300 rounded-lg shadow-md bg-white">
+          <svg className="w-full h-full">
+            {/* Add horizontal guide line */}
+            
+            <line 
+              x1="0" 
+              y1={`calc(50% + ${(points1[0].y / svgSize * 100)}%)`} 
+              x2="100%" 
+              y2={`calc(50% + ${(points1[0].y / svgSize * 100)}%)`} 
+              stroke="#FF4136" 
+              strokeWidth="1" 
+              strokeDasharray="2 4" 
+            />
+            {modeState === 'compare' && selectedPoint !== null && (
+              <line 
+                x1="0" 
+                y1={`calc(50% + ${(points1[selectedPoint].y / svgSize * 100)}%)`} 
+                x2="100%" 
+                y2={`calc(50% + ${(points1[selectedPoint].y / svgSize * 100)}%)`} 
+                stroke="#0074D9" 
+                strokeWidth="1" 
+                strokeDasharray="2 4" 
+              />
+            )}
+
+            {points1.map((point, i) => (
+              <circle
+                key={`1-${i}`}
+                cx={`${3 +(i / numPoints) * 50}%`}
+                cy={`${50 + (point.y / svgSize * 100)}%`}
+                r={getPointSize(i , true)}
+                fill={getColor(i)}
+              />
+            ))}
+            {points2.map((point, i) => (
+              <circle
+                key={`2-${i}`}
+                cx={`${53 +(i / numPoints) * 50}%`}
+                cy={`${50 + (point.y / svgSize * 100)}%`}
+                r={getPointSize(i , false)}
+                fill={getColor(i)}
+              />
+            ))}
+          </svg>
+          <div className="absolute bottom-0 left-0 w-full h-6 flex justify-between px-2 text-gray-600">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="text-xs">{i * (numPoints / 4)}</div>
+            ))}
+          </div>
+        </div>
+        )}
+        
+        {(modeState ==="simplePosition" ||  modeState==="simpleVelocity"|| modeState === "simpleAcceleration")  && (
+        <div className="w-full md:w-1/2 aspect-square relative border border-gray-300 rounded-lg shadow-md bg-white">
+          <svg className="w-full h-full">
+            {/* Add horizontal guide line */}
+            {modeState === "simplePosition" &&(
             <line 
               x1="0" 
               y1={`calc(50% + ${(points1[0].y / svgSize * 100)}%)`} 
@@ -554,180 +503,117 @@ export function CircularMotionWaveSimulationComponent() {
               strokeDasharray="2 4" 
             />
           )}
-                {/* 横軸の目盛り */}
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <line 
-                    key={i}
-                    x1={`${5 + (i * 30)}%`}  // 目盛りを等間隔で配置
-                    y1="48%"
-                    x2={`${5 + (i * 30)}%`}
-                    y2="52%"
-                    stroke="black"
-                    strokeWidth="1"
-                  />
-                ))}
 
-                {/* 縦軸の目盛り */}
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <line 
-                    key={i}
-                    x1="4.5%"
-                    y1={`${5 + (i * 22.5)}%`}  // 目盛りを等間隔で配置
-                    x2="5.5%"
-                    y2={`${5 + (i * 22.5)}%`}
-                    stroke="black"
-                    strokeWidth="1"
-                  />
-                ))}
-
-
-
-              {/* 変位のグラフ*/}
-              {modeState === "simplePosition" && (
-                <circle
-                  cx={`${5 + (time / (3 * period)) * 90}%`}  // 5%から始まり、95%まで移動
-                  cy={`${50 + (currentValue / maxValue) *  radius / svgSize * 100}%`}
-                  r={getPointSize(0, true)}
-                  fill={getColor(0)}
-                  onClick={() => togglePoint(0)}
-                  style={{ cursor: 'pointer' }}
-                />
-              )}
-              {modeState === "simplePosition" && 
-              plotPoints.map((point, index) => (
-                <circle
-                  key={index}
-                  cx={`${point.x}%`}
-                  cy={`${point.y}%`}
-                  r={2}
-                  fill="red"
-                />
-              ))}
-
-
-
-              {/* 速度のグラフ*/}
-              {modeState === "simpleVelocity" && (
-                <line
-                  x1={`${5 + (time / (3 * period)) * 90}%`} 
-                  y1="50%"
-                  x2={`${5 + (time / (3 * period)) * 90}%`} 
-                  y2={`${50 - ( velocity.y * 0.2) / svgSize * 100}%`}
-                  stroke="green"
-                  strokeWidth="1.5"
-                  markerEnd="url(#arrowhead)"
-                />
-              )}
-                {modeState ==="simpleVelocity" && 
-                  plotPoints.map((point, index) => (
-                    <circle
-                      key={index}
-                      cx={`${point.x}%`}
-                      cy={`${point.y}%`}
-                      r={2}
-                      fill="green"
-                    />
-                  ))}
-
-
-              {/* 加速度のグラフ*/}
-            {modeState === "simpleAcceleration" && (
-                <line
-                  x1={`${5 + (time / (3 * period)) * 90}%`} 
-                  y1="50%"
-                  x2={`${5 + (time / (3 * period)) * 90}%`} 
-                  y2={`${50 + ( acceleration.y * 0.2) / svgSize * 100}%`}
-                  stroke="blue"
-                  strokeWidth="1.5"
-                  markerEnd="url(#arrowhead)"
-                />
-              )}
-                {modeState ==="simpleAcceleration" && 
-                  plotPoints.map((point, index) => (
-                    <circle
-                      key={index}
-                      cx={`${point.x}%`}
-                      cy={`${point.y}%`}
-                      r={2}
-                      fill="blue"
-                    />
-                  ))}
-              
-
-              {/* 矢印の定義 */}
-              <defs>
-                <marker
-                  id="arrowhead"
-                  markerWidth="10"
-                  markerHeight="7"
-                  refX="0"
-                  refY="3.5"
-                  orient="auto"
-                >
-                  <polygon points="0 0, 10 3.5, 0 7" fill="currentColor" />
-                </marker>
-              </defs>
-            </svg>
-            <div className="absolute bottom-0 left-0 w-full h-6 flex justify-between px-2 text-gray-600">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="text-xs">{(i * (4 * period) / 4).toFixed(1)}s</div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 位相比較モードや虹色モードのグラフ表示 */}
-        {(modeState === "compare" || modeState ==="rainbow") && (
-          <div className="w-full md:w-1/2 aspect-square relative border border-gray-300 rounded-lg shadow-md bg-white">
-            <svg className="w-full h-full">
-              {/* Add horizontal guide line */}
-              
+            {/* グラフの縦軸と横軸 */}
+              {/* 横軸 */}
               <line 
-                x1="0" 
-                y1={`calc(50% + ${(points1[0].y / svgSize * 100)}%)`} 
-                x2="100%" 
-                y2={`calc(50% + ${(points1[0].y / svgSize * 100)}%)`} 
-                stroke="#FF4136" 
+                x1="5%" 
+                y1="50%" 
+                x2="95%" 
+                y2="50%" 
+                stroke="black" 
                 strokeWidth="1" 
-                strokeDasharray="2 4" 
               />
-              {modeState === 'compare' && selectedPoint !== null && (
+
+              {/* 縦軸 */}
+              <line 
+                x1="5%" 
+                y1="5%" 
+                x2="5%" 
+                y2="95%" 
+                stroke="black" 
+                strokeWidth="1" 
+              />
+
+              {/* 横軸の目盛り */}
+              {Array.from({ length: 5 }).map((_, i) => (
                 <line 
-                  x1="0" 
-                  y1={`calc(50% + ${(points1[selectedPoint].y / svgSize * 100)}%)`} 
-                  x2="100%" 
-                  y2={`calc(50% + ${(points1[selectedPoint].y / svgSize * 100)}%)`} 
-                  stroke="#0074D9" 
-                  strokeWidth="1" 
-                  strokeDasharray="2 4" 
+                  key={i}
+                  x1={`${5 + (i * 23.8)}%`}  // 目盛りを等間隔で配置
+                  y1="48%"
+                  x2={`${5 + (i * 23.8)}%`}
+                  y2="52%"
+                  stroke="black"
+                  strokeWidth="1"
                 />
+              ))}
+
+              {/* 縦軸の目盛り */}
+              {Array.from({ length: 5 }).map((_, i) => (
+                <line 
+                  key={i}
+                  x1="4.5%"
+                  y1={`${5 + (i * 22.5)}%`}  // 目盛りを等間隔で配置
+                  x2="5.5%"
+                  y2={`${5 + (i * 22.5)}%`}
+                  stroke="black"
+                  strokeWidth="1"
+                />
+              ))}
+              
+            {/* 赤い点 */}
+            <circle
+              cx={`${5 + (time / (4 * period)) * 95}%`}  // 5%から始まり、95%まで移動
+              cy={ modeState === "simplePosition" ? `calc(50% + ${(points1[0].y / svgSize * 100)}%)` : "50%"}
+              r={getPointSize(0, true)}
+              fill={getColor(0)}
+              onClick={() => togglePoint(0)}
+              style={{ cursor: 'pointer' }}
+            />
+
+
+              {/* 単振動モードで速度と加速度のベクトルを表示 */}
+              {(modeState === "simpleAcceleration" || modeState ==="simplePosition" || modeState==="simpleVelocity") && (
+                
+                <>
+                  {/* 速度ベクトル */}
+                  {modeState==="simpleVelocity" && (
+                    <line
+                      x1={`${5 + (time / (4 * period)) * 95}%`} 
+                      y1={`${50}%`}
+                      x2={`${5 + (time / (4 * period)) * 95}%`} 
+                      y2={`${50  - velocity.y * 0.2/ svgSize * 100 }%`}
+                      stroke="green"
+                      strokeWidth="1.5"
+                      markerEnd="url(#arrowhead)"
+                    />
+                  )}
+                  {/* 加速度ベクトル */}
+                  {modeState==="simpleAcceleration" && (
+                    <line
+                      x1={`${5 + (time / (4 * period)) * 95}%`} 
+                      y1={`${50 }%`}
+                      x2={`${5 + (time / (4 * period)) * 95}%`} 
+                      y2={`${50  + acceleration.y * 0.2 / svgSize * 100}%`}
+                      stroke="blue"
+                      strokeWidth="1.5"
+                      markerEnd="url(#arrowhead)"
+                    />
+                  )}
+                  {/* 矢印の定義 */}
+                  <defs>
+                    <marker
+                      id="arrowhead"
+                      markerWidth="10"
+                      markerHeight="7"
+                      refX="0"
+                      refY="3.5"
+                      orient="auto"
+                    >
+                      <polygon points="0 0, 10 3.5, 0 7" fill="currentColor" />
+                    </marker>
+                  </defs>
+                </>
               )}
 
-              {points1.map((point, i) => (
-                <circle
-                  key={`1-${i}`}
-                  cx={`${3 +(i / numPoints) * 50}%`}
-                  cy={`${50 + (point.y / svgSize * 100)}%`}
-                  r={getPointSize(i , true)}
-                  fill={getColor(i)}
-                />
-              ))}
-              {points2.map((point, i) => (
-                <circle
-                  key={`2-${i}`}
-                  cx={`${53 +(i / numPoints) * 50}%`}
-                  cy={`${50 + (point.y / svgSize * 100)}%`}
-                  r={getPointSize(i , false)}
-                  fill={getColor(i)}
-                />
-              ))}
-            </svg>
-            <div className="absolute bottom-0 left-0 w-full h-6 flex justify-between px-2 text-gray-600">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="text-xs">{i * (numPoints / 4)}</div>
-              ))}
-            </div>
+
+          </svg>
+          <div className="absolute bottom-0 left-0 w-full h-6 flex justify-between px-2 text-gray-600">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="text-xs">{i * (numPoints / 4)}</div>
+            ))}
           </div>
+        </div>
         )}
       </div>
 
@@ -802,10 +688,7 @@ export function CircularMotionWaveSimulationComponent() {
       <div className="space-y-4 bg-white p-4 rounded-lg shadow">
         <div className="flex items-center space-x-4">
           <button
-            onClick={()=>{
-              setTime(0);
-              setPlottedPoints([]); // プロットをリセット
-            }}
+            onClick={()=>setTime(0)}
             className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition duration-150"           
           >
             Reset
@@ -819,7 +702,7 @@ export function CircularMotionWaveSimulationComponent() {
           <input
             type="range"
             min={0}
-            max={period * 3}
+            max={period * 4}
             step={period / 80}
             value={time}
             onChange={(e) => {
