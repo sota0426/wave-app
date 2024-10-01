@@ -6,7 +6,7 @@ import 'katex/dist/katex.min.css'
 export function CircularMotionWaveSimulationComponent() {
   // Stateの定義
   const [period, setPeriod] = useState(4); // 周期
-  const [radius, setRadius] = useState(80); // 半径
+  const [radius, setRadius] = useState(60); // 半径
   const [numPoints, setNumPoints] = useState(24); // 点の数
   const [time, setTime] = useState(0); // 現在の時間
   const [isRunning, setIsRunning] = useState(true); // アニメーションのオン/オフ
@@ -241,7 +241,8 @@ export function CircularMotionWaveSimulationComponent() {
     <div className="p-4 max-w-4xl mx-auto bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800">
       <h1 className="text-2xl font-bold mb-4 text-gray-900">単振動と波動のシミュレーション</h1>
 
-      <div className="flex items-center space-x-2 mt-6 bg-white p-4 rounded-lg shadow">
+      {/* モードを選択するコンテナ */}
+      <div className="flex items-center space-x-2 mt-1 bg-white p-4 rounded-lg shadow">
         <label className="flex items-center ml-4">
           <input
             type="radio"
@@ -251,6 +252,7 @@ export function CircularMotionWaveSimulationComponent() {
             onChange={() => {
               setModeState("simplePosition");
               setSelectedPoint(null);
+              setTime(0)
               setPlottedPoints([]); // プロットをリセット
             }}
             className="mr-2 accent-indigo-600"
@@ -267,6 +269,7 @@ export function CircularMotionWaveSimulationComponent() {
             onChange={() => {
               setModeState('compare');
               setSelectedPoint(null);
+              setTime(0)
               setPlottedPoints([]); // プロットをリセット
             }}
             className="mr-2 accent-indigo-600"
@@ -283,6 +286,7 @@ export function CircularMotionWaveSimulationComponent() {
             onChange={() => {
               setModeState('rainbow');
               setSelectedPoint(null);
+              setTime(0)
               setPlottedPoints([]); // プロットをリセット
             }}
             className="mr-2 accent-indigo-600"
@@ -295,7 +299,6 @@ export function CircularMotionWaveSimulationComponent() {
       {/* 単振動モードのときにのみ表示されるチェックボックス */}
       {(modeState === "simpleAcceleration" || modeState ==="simplePosition" || modeState==="simpleVelocity") && (
         <div className="flex items-center space-x-4 mb-4 bg-white p-4 rounded-lg shadow">
-
           <label className="flex items-center">
             <input
               type="radio"
@@ -339,7 +342,37 @@ export function CircularMotionWaveSimulationComponent() {
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row mb-8 space-y-6 md:space-y-0 md:space-x-6">
+     {/* 位相比較モードにおいて、位相比較コンテナ */}
+     {modeState === 'compare' && (
+        <div className="flex items-center space-x-4 mb-4 bg-white p-4 rounded-lg shadow">
+            <span className=" font-bold mb-1 text-gray-700">位相比較モード</span>
+
+          <div className="grid sm:grid-cols-3 md:grid-cols-6 gap-4">
+            {Array.from({ length: numPoints }).map((_, i) => (
+              i !== 0 &&  i % 4 === 0 && (
+                <div key={i} className="flex items-center">
+                  <input
+                    type="radio"
+                    id={`point-${i}`}
+                    checked={selectedPoint === i}
+                    onChange={() => togglePoint(i)}
+                    className="mr-2 accent-indigo-600"
+                  />
+                  <label htmlFor={`point-${i}`} className={`${i === selectedPoint ? 'text-blue-600' : 'text-gray-600'} cursor-pointer`}>
+                    {(i/numPoints * 360).toFixed(0)}°
+                  </label>
+                </div>
+              )
+            ))}
+          </div>
+        </div>
+      )}
+
+
+        {/* グラフコンテナ */}
+      <div className="flex flex-col md:flex-row  md:space-x-6">
+
+        {/* 左の円運動のグラフ */}
         <div ref={circularMotionRef} className="w-full md:w-1/2 aspect-square relative border border-gray-300 rounded-lg shadow-md bg-white">
           <svg className="w-full h-full">
             <ellipse 
@@ -417,8 +450,9 @@ export function CircularMotionWaveSimulationComponent() {
                 strokeWidth="2"
               />
             )}
-                        {/* 赤色のθ表示 */}
-                        {rotationAngle === 0   && (
+            
+            {/* 赤色のθ表示 */}
+            {rotationAngle === 0   && (
               <text
                 x={svgSize / 1.75}
                 y={svgSize / 1.8}
@@ -518,7 +552,7 @@ export function CircularMotionWaveSimulationComponent() {
           </svg>          
         </div> 
 
-        {/* 単振動モードのグラフ表示 */}
+        {/* 右グラフ：単振動モードのグラフ表示 */}
         {(modeState ==="simplePosition" ||  modeState==="simpleVelocity"|| modeState === "simpleAcceleration")  && (
           <div className="w-full md:w-1/2 aspect-square relative border border-gray-300 rounded-lg shadow-md bg-white">
             <svg className="w-full h-full">
@@ -676,11 +710,11 @@ export function CircularMotionWaveSimulationComponent() {
           </div>
         )}
 
-        {/* 位相比較モードや虹色モードのグラフ表示 */}
+        {/* 右グラフ：位相比較モードや虹色モードのグラフ表示 */}
         {(modeState === "compare" || modeState ==="rainbow") && (
           <div className="w-full md:w-1/2 aspect-square relative border border-gray-300 rounded-lg shadow-md bg-white">
             <svg className="w-full h-full">
-              {/* Add horizontal guide line */}
+              {/* 赤色水平線*/}
               
               <line 
                 x1="0" 
@@ -731,46 +765,9 @@ export function CircularMotionWaveSimulationComponent() {
         )}
       </div>
 
-      {modeState === 'compare' && (
-        <div className="mt-6 bg-white p-4 rounded-lg shadow">
 
-          <label className="text-xl font-bold mb-1 text-gray-800 flex items-center">
-          <input
-            type="checkbox"
-            name="mode"
-            value="compare"
-            checked={modeState === 'compare'}
-            onChange={() => {
-              setModeState('compare');
-              setSelectedPoint(null);
-            }}
-            className="mr-2 accent-indigo-600"
-          />
-          <span className="text-gray-700">位相比較モード　</span>
-        </label>
-
-          <div className="grid sm:grid-cols-3 md:grid-cols-6 gap-4">
-            {Array.from({ length: numPoints }).map((_, i) => (
-              i !== 0 &&  i % 4 === 0 && (
-                <div key={i} className="flex items-center">
-                  <input
-                    type="radio"
-                    id={`point-${i}`}
-                    checked={selectedPoint === i}
-                    onChange={() => togglePoint(i)}
-                    className="mr-2 accent-indigo-600"
-                  />
-                  <label htmlFor={`point-${i}`} className={`${i === selectedPoint ? 'text-blue-600' : 'text-gray-600'} cursor-pointer`}>
-                    {(i/numPoints * 360).toFixed(0)}°
-                  </label>
-                </div>
-              )
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-wrap items-center space-x-4 space-y-2 mb-6">
+     {/* それぞれの設定コンテナ */}
+      <div className="flex flex-wrap m-6 p-4 bg-white shadow rounded items-center space-x-4 space-y-2 mb-6">
         <div className="flex items-center space-x-2">
           <label className="text-gray-700">周期 : T= {period.toFixed(1)} 秒 </label>
           <button onClick={() => setPeriod(p => Math.min(p + 0.5, 10))} className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-150">+</button>
@@ -787,6 +784,7 @@ export function CircularMotionWaveSimulationComponent() {
           <button onClick={() => setNumPoints(n => Math.max(n - 8, 8))} className="px-3 py-1 bg-purple-500 text-white rounded hover:bg-purple-600 transition duration-150">-</button>
         </div>
         <div className="flex items-center space-x-2">
+          <br />
           <label className="text-gray-700">回転角度: {rotationAngle}°</label>
           <input
             type="range"
@@ -837,6 +835,8 @@ export function CircularMotionWaveSimulationComponent() {
           赤色の位相：  <InlineMath math={thetaEquation()} />
         </div>
         <div>
+         
+          {/**  数式の表示
           <div className="text-red-600">
             赤色の変位： <InlineMath math={displacementEquation()} />
           </div>
@@ -849,8 +849,11 @@ export function CircularMotionWaveSimulationComponent() {
               </div>
             </div>
           )}
+            */}
+
         </div>
       </div>
     </div>
   )
 }
+

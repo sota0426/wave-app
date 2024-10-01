@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { CircularMotionWaveSimulationComponent } from "@/components/circular-motion-wave-simulation"
-import { CircularMotionWaveSimulationComponent2 } from '@/components/CircularMotion/CircularMotionWaveSimulationComponent'
 import WaveInterferenceCircularMotion from "@/components/wave-interference-circular-motion"
 
 export default function Page() {
@@ -28,23 +27,12 @@ export default function Page() {
               波の干渉と円運動
             </Button>
 
-            <Button 
-              onClick={() => setSelectedPage('circular2')}
-              variant={selectedPage === 'circular2' ? 'outline' : 'default'}
-            >
-              単振動と等速円運動_2
-            </Button>
-
-
           </div>
         </CardContent>
       </Card>
       
       {selectedPage === 'circular' &&  <CircularMotionWaveSimulationComponent />}
       {selectedPage ==='interference' &&  <WaveInterferenceCircularMotion />}
-
-      {selectedPage === 'circular2' &&  <CircularMotionWaveSimulationComponent2 />}
-
     </div>
   )
 }
