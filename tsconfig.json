@@ -12,6 +12,8 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "target": "es2015",   // または 'es6' 以上に設定
+    "downlevelIteration": true,    
     "baseUrl": ".",
     "plugins": [
       {
