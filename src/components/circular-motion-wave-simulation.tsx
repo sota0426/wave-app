@@ -129,7 +129,7 @@ export default function CircularMotionWaveSimulationComponent() {
     const numericOmega = `${((time / period * 2) % period).toFixed(1)}π`
     const numericPhaseDiff = isBlue ? ((selectedPoint ?? 0) / numPoints * 2).toFixed(1) : '0';
     return `y = A \\sin(${omega} ${isBlue ? `-${phaseDiff}` : ''}) 
-    \\quad ⇔\\quad y=${radius.toFixed(0)} \\sin(${numericOmega} ${isBlue ? `-${numericPhaseDiff}π` : ''}) `
+    \\quad ⇔\\quad y=${radius.toFixed(0)} \\sin(${numericOmega} ${isBlue ? `-Δθ` : ''}) `
   }
 
   // 点の計算
@@ -834,20 +834,19 @@ export default function CircularMotionWaveSimulationComponent() {
         </div>
         <div>
          
-          {/**  数式の表示
+
           <div className="text-red-600">
             赤色の変位： <InlineMath math={displacementEquation()} />
           </div>
           {modeState === 'compare' && selectedPoint !== null && (
             <div className="text-blue-600 mt-2">
               青色の変位： <InlineMath math={displacementEquation(true)} />
-              <div className="mt-2 text-gray-700">
-                位相の遅れ：
-                <InlineMath math={`\\Delta \\theta = ${(getPhaseDifference() / Math.PI).toFixed(2)}\\pi \\text{ [rad]}= ${(getPhaseDifference() * 180 / Math.PI).toFixed(0)}° `} />
-              </div>
+                　,　
+                <InlineMath math={`\\Delta \\theta = ${(getPhaseDifference() / Math.PI).toFixed(1)}\\pi ( ${(getPhaseDifference() * 180 / Math.PI).toFixed(0)}° `} />
+                  ）
+
             </div>
           )}
-            */}
 
         </div>
       </div>

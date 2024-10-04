@@ -12,13 +12,13 @@ export default function Page() {
   const [selectedPage, setSelectedPage] = useState<'circular' | 'interference' | 'waveMotion'>('waveMotion')
 
   return (
-    <div className="p-4">
-      <Card className="mb-4">
-        <CardContent className="pt-6">
-          <div className="flex justify-center space-x-4">
+    <>
+      <Card className="">
+        <CardContent className="p-2 bg-stone-300">
+          <div className="flex justify-center space-x-2">
           <Button 
               onClick={() => setSelectedPage('waveMotion')}
-              variant={selectedPage === 'interference' ? 'outline' : 'default'}
+              variant={selectedPage === 'waveMotion' ? 'outline' : 'default'}
             >
               波の干渉シミュレーション
             </Button>            
@@ -44,6 +44,6 @@ export default function Page() {
         {selectedPage === 'interference' && <WaveInterferenceCircularMotion />}
         {selectedPage === 'waveMotion' && <WaveSimulation />}       
       </Suspense>
-    </div>
+    </>
   )
 }
