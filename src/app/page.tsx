@@ -3,25 +3,27 @@
 import { useState, Suspense, lazy } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import WaveSimulation from '@/components/wave-motion'
+import WaveSimulation from '@/components/wave-motion/wave-motion-simulation'
 const CircularMotionWaveSimulationComponent = lazy(() => import('@/components/circular-motion-wave-simulation'))
 const WaveInterferenceCircularMotion = lazy(() => import('@/components/wave-interference-circular-motion'))
-
+const CombinedSimulation = lazy(()=>import('@/components/wave-motion/wave-motion'))
 
 export default function Page() {
-  const [selectedPage, setSelectedPage] = useState<'circular' | 'interference' | 'waveMotion'>('waveMotion')
+  const [selectedPage, setSelectedPage] = useState<'circular' | 'interference' | 'waveMotion'|'waveReflection'>('waveMotion')
 
   return (
     <>
       <Card className="">
-        <CardContent className="p-2 bg-stone-300">
+        <CardContent className="p-2 bg-stone-3
+        
+        00">
           <div className="flex justify-center space-x-2">
           <Button 
               onClick={() => setSelectedPage('waveMotion')}
               variant={selectedPage === 'waveMotion' ? 'outline' : 'default'}
             >
               波の干渉シミュレーション
-            </Button>            
+            </Button>                     
             <Button 
               onClick={() => setSelectedPage('circular')}
               variant={selectedPage === 'circular' ? 'outline' : 'default'}
@@ -42,7 +44,7 @@ export default function Page() {
       <Suspense fallback={<div>Loading...</div>}>
         {selectedPage === 'circular' && <CircularMotionWaveSimulationComponent />}
         {selectedPage === 'interference' && <WaveInterferenceCircularMotion />}
-        {selectedPage === 'waveMotion' && <WaveSimulation />}       
+        {selectedPage === 'waveMotion' && <CombinedSimulation />}        
       </Suspense>
     </>
   )
