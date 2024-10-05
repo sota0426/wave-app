@@ -42,7 +42,8 @@ function AnimatedWaveLine({
   timeRef: React.MutableRefObject<number>
   isRunning: boolean
 }) {
-  const lineRef = useRef<THREE.Line>(null)
+  const lineRef = useRef<THREE.Line>(null);
+
 
   const numPoints = 100
   const positions = useMemo(() => {
@@ -108,7 +109,6 @@ function GridWave({
   const redSphereRef = useRef<THREE.Mesh | null>(null)
   const blueSphereRef = useRef<THREE.Mesh | null>(null)
   const compositeYRef = useRef<number>(0);
-  
   const geometry = useMemo(() => {
     const geo = new THREE.PlaneGeometry(70, 70, dot, dot)
     geo.rotateX(-Math.PI / 2)
