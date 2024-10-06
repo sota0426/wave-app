@@ -240,6 +240,15 @@ export default function WaveInterferenceCircularMotion() {
         </CardContent>
       </Card>
     </div>
+    <p>
+      説明：
+    </p>
+    <p>
+      ・同じ周波数の場合、位相によって波の干渉が変化します。
+    </p>
+    <p>
+      ・周波数が異なる場合、うなりの原理によって波の干渉が変化します。
+    </p>
   </div>
   )
 }

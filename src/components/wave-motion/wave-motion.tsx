@@ -4,7 +4,7 @@ import RefractionWaveSimulation from './wave-motion-refraction'
 
 export default function CombinedSimulation() {
   // モードを管理する状態変数
-  const [mode, setMode] = useState<'wave' | 'refraction'>('refraction')
+  const [mode, setMode] = useState<'wave' | 'refraction'>('wave')
 
   // ラジオボタンでモードを切り替える関数
   const handleModeChange = (event: React.ChangeEvent<HTMLInputElement>) => {

@@ -440,7 +440,7 @@ export default function WaveSimulation() {
         </label>
 
         <label className="block text-black">
-          ドット数: {dot.toFixed(0)}
+          格子数: {dot.toFixed(0)}
           <input
             type="range"
             min="50"
@@ -453,7 +453,7 @@ export default function WaveSimulation() {
         </label>
 
         <label className="block text-black">
-          この変位以下を黒色表示: {blackThreshold.toFixed(2)}
+        黒色閾値: {blackThreshold.toFixed(2)}
           <input
             type="range"
             min="0"
@@ -469,7 +469,7 @@ export default function WaveSimulation() {
       {/* Section 3: Source Settings */}
       <div className="flex flex-wrap space-x-4 mb-4">
         <label className="block text-black">
-          青色の位相の遅れ: {(phaseShift * 180) / Math.PI}°
+          青色の位相の遅れ: {((phaseShift * 180) / Math.PI).toFixed(0)}°
           （<InlineMath math={`${(phaseShift / Math.PI).toFixed(1)}\\pi`} />）
           <input
             type="range"
@@ -570,6 +570,16 @@ export default function WaveSimulation() {
           </div>
         )}
       </div>
+      <p>
+        【各要素の説明】
+      </p>
+      <p>
+        減衰度：波の強さが距離によって減衰する度合いを表します。
+        <br />格子数：波の干渉の様子を表示する格子の数を表します。
+        <br />黒色閾値：波の強さがこの値以下の場合、黒色で表示されます。
+        <br />位相の遅れ：青色の波の位相が赤色の波の位相より遅れる度合いを表します。
+        <br />波を抽出：波の干渉の様子を表示するかどうかを表します。
+      </p>
     </div>
   )
 }
