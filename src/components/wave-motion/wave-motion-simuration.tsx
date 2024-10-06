@@ -1,7 +1,8 @@
 // WaveSimulation.tsx
 import React, { useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, ThreeEvent } from '@react-three/fiber'
-import { Line, OrbitControls } from '@react-three/drei'
+import { OrbitControls } from '@react-three/drei'
+import { Line } from 'three';
 import * as THREE from 'three'
 import 'katex/dist/katex.min.css'
 import { InlineMath } from 'react-katex'
@@ -42,8 +43,7 @@ function AnimatedWaveLine({
   timeRef: React.MutableRefObject<number>
   isRunning: boolean
 }) {
-  const lineRef = useRef<THREE.Line>(null);
-
+  const lineRef = useRef<Line>(null);
 
   const numPoints = 100
   const positions = useMemo(() => {
@@ -83,9 +83,9 @@ function AnimatedWaveLine({
   })
 
   return (
-    <line ref={lineRef} geometry={geometry}>
-      <lineBasicMaterial color={color} />
-    </line>
+    <primitive ref={lineRef} object={geometry}>
+      <lineBasicMaterial attach="material" color={color} />
+    </primitive>
   )
 }
 

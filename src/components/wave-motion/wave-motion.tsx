@@ -13,8 +13,9 @@ export default function CombinedSimulation() {
 
   return (
     <>
+ 
     <div className="p-4 max-w-full mx-auto">
-      {/* モード選択用ラジオボタン */}
+               {/* 現在のモードに応じたシミュレーションの表示 
       <div className="flex justify-center space-x-4 mb-4">
         <label className="flex items-center">
           <input
@@ -36,10 +37,10 @@ export default function CombinedSimulation() {
             onChange={handleModeChange}
             className="mr-2 accent-indigo-600"
           />
-          <span className="text-gray-700">屈折波モード</span>
+          <span className="text-gray-700">反射モード</span>
         </label>
       </div>
-
+*/}
       {/* 現在のモードに応じたシミュレーションの表示 */}
 
         {mode === 'wave' ? (

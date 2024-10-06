@@ -3,10 +3,11 @@ import { motion } from 'framer-motion'
 import { InlineMath, BlockMath } from 'react-katex'
 import 'katex/dist/katex.min.css'
 
+// メインコンポーネントの定義
 export default function CircularMotionWaveSimulationComponent() {
-  // Stateの定義
-  const [period, setPeriod] = useState(4); // 周期
-  const [radius, setRadius] = useState(60); // 半径
+  // 状態変数の定義
+  const [period, setPeriod] = useState(4); // 周期（T）
+  const [radius, setRadius] = useState(60); // 半径（A）
   const [numPoints, setNumPoints] = useState(24); // 点の数
   const [time, setTime] = useState(0); // 現在の時間
   const [isRunning, setIsRunning] = useState(true); // アニメーションのオン/オフ
@@ -16,24 +17,36 @@ export default function CircularMotionWaveSimulationComponent() {
   const [thetaDeg, setThetaDeg] = useState("0"); // 角度
   const [rotationAngle, setRotationAngle] = useState(90); // 回転角度
   const circularMotionRef = useRef<HTMLDivElement>(null); // コンポーネントの参照
-  const [plottedPoints, setPlottedPoints] = useState<{ time: number; value: number }[]>([]);
-  const prevTimeRef = useRef(time);
+  const [plottedPoints, setPlottedPoints] = useState<{ time: number; value: number }[]>([]); // プロットされたデータ
+  const prevTimeRef = useRef(time); // 前の時間の参照
 
 
-  // サイズの更新
+  // サイズの更新用Effect
   useEffect(() => {
+    // 現在の表示領域のサイズを基に、SVGのサイズと円の半径を更新する関数
     const updateSize = () => {
+      // circularMotionRef.currentが存在する場合にのみ処理を続行
       if (circularMotionRef.current) {
+        // 現在の表示領域の幅（offsetWidth）を取得
         const width = circularMotionRef.current.offsetWidth;
+        // SVGのサイズを現在の幅に設定
         setSvgSize(width);
-        setRadius(width * 0.4); // 半径を40%に設定
+        // 円の半径を表示領域の幅の40%に設定
+        setRadius(width * 0.4);
       }
     };
 
+    // 初回レンダリング時に即座にサイズを更新
     updateSize();
+
+    // ウィンドウのリサイズイベントを監視し、サイズを再計算
     window.addEventListener('resize', updateSize);
+
+    // コンポーネントがアンマウントされる際に、リサイズイベントリスナーを削除
     return () => window.removeEventListener('resize', updateSize);
-  }, []);
+  }, []); // 空の依存配列により、このEffectは初回レンダリング時にのみ実行される
+
+
 
   // タイマーの処理
   useEffect(() => {
@@ -45,6 +58,7 @@ export default function CircularMotionWaveSimulationComponent() {
     }
     return () => clearInterval(timer);
   }, [isRunning, period]);
+
 
   // 座標回転処理
   const getRotatedCoordinates = (x: number, y: number, angle: number) => {
@@ -91,10 +105,6 @@ export default function CircularMotionWaveSimulationComponent() {
     }
   }
 
-  const getEquation = (index: number) => {
-    const phase = ((index / numPoints) * 2 * Math.PI) % ( 2* Math.PI)
-    return `y = ${radius.toFixed(0)} \\sin(\\frac{2\\pi t}{${period}} - ${phase.toFixed(2)})`
-  }
 
   const togglePoint = (index: number) => {
     if (modeState !== 'compare' || index === 0) return
