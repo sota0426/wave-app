@@ -1,8 +1,7 @@
 // WaveSimulation.tsx
 import React, { useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, ThreeEvent } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
-import { Line } from 'three';
+import { Line, OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import 'katex/dist/katex.min.css'
 import { InlineMath } from 'react-katex'
@@ -43,7 +42,8 @@ function AnimatedWaveLine({
   timeRef: React.MutableRefObject<number>
   isRunning: boolean
 }) {
-  const lineRef = useRef<Line>(null);
+  const lineRef = useRef<THREE.Line>(null);
+
 
   const numPoints = 100
   const positions = useMemo(() => {
@@ -83,9 +83,9 @@ function AnimatedWaveLine({
   })
 
   return (
-    <primitive ref={lineRef} object={geometry}>
-      <lineBasicMaterial attach="material" color={color} />
-    </primitive>
+    <line ref={lineRef} geometry={geometry}>
+      <lineBasicMaterial color={color} />
+    </line>
   )
 }
 
@@ -315,7 +315,7 @@ export default function WaveSimulation() {
   const [sourceDistance, setSourceDistance] = useState<number>(20)
   const [period, setPeriod] = useState<number>(1)
   const [speed, setSpeed] = useState<number>(2)
-  const [dot, setDot] = useState<number>(150)
+  const [dot, setDot] = useState<number>(200)
   const [attenuation, setAttenuation] = useState<number>(20)
   const [blackThreshold, setBlackThreshold] = useState<number>(0)
   const [phaseShift, setPhaseShift] = useState<number>(0)
@@ -440,7 +440,7 @@ export default function WaveSimulation() {
         </label>
 
         <label className="block text-black">
-          格子数: {dot.toFixed(0)}
+          ドット数: {dot.toFixed(0)}
           <input
             type="range"
             min="50"
@@ -453,7 +453,7 @@ export default function WaveSimulation() {
         </label>
 
         <label className="block text-black">
-        黒色閾値: {blackThreshold.toFixed(2)}
+          この変位以下を黒色表示: {blackThreshold.toFixed(2)}
           <input
             type="range"
             min="0"
@@ -570,16 +570,6 @@ export default function WaveSimulation() {
           </div>
         )}
       </div>
-      <p>
-        【各要素の説明】
-      </p>
-      <p>
-        減衰度：波の強さが距離によって減衰する度合いを表します。
-        <br />格子数：波の干渉の様子を表示する格子の数を表します。
-        <br />黒色閾値：波の強さがこの値以下の場合、黒色で表示されます。
-        <br />位相の遅れ：青色の波の位相が赤色の波の位相より遅れる度合いを表します。
-        <br />波を抽出：波の干渉の様子を表示するかどうかを表します。
-      </p>
     </div>
   )
 }

@@ -8,7 +8,7 @@ const WaveInterferenceCircularMotion = lazy(() => import('@/components/wave-inte
 const CombinedSimulation = lazy(()=>import('@/components/wave-motion/wave-motion'))
 
 export default function Page() {
-  const [selectedPage, setSelectedPage] = useState<'circular' | 'interference' | 'waveMotion'|'waveReflection'>('waveMotion')
+  const [selectedPage, setSelectedPage] = useState<'circular' | 'interference' | 'waveMotion'|'waveReflection'>('circular')
 
   return (
     <>

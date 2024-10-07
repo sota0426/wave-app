@@ -775,6 +775,8 @@ export default function CircularMotionWaveSimulationComponent() {
 
 
      {/* それぞれの設定コンテナ */}
+
+
       <div className="flex flex-wrap m-6 p-4 bg-white shadow rounded items-center space-x-4 space-y-2 mb-6">
         <div className="flex items-center space-x-2">
           <label className="text-gray-700">周期 : T= {period.toFixed(1)}  </label>
@@ -791,7 +793,10 @@ export default function CircularMotionWaveSimulationComponent() {
           <button onClick={() => setNumPoints(n => Math.min(n + 8, 80))} className="px-3 py-1 bg-purple-500 text-white rounded hover:bg-purple-600 transition duration-150">+</button>
           <button onClick={() => setNumPoints(n => Math.max(n - 8, 8))} className="px-3 py-1 bg-purple-500 text-white rounded hover:bg-purple-600 transition duration-150">-</button>
         </div>
-        <div className="flex items-center space-x-2">
+      </div>
+
+      <div className="flex flex-wrap m-6 p-4 bg-white shadow rounded items-center space-x-4 space-y-2 mb-6">
+     <div className="flex items-center space-x-2">
           <br />
           <label className="text-gray-700">回転角度: {rotationAngle}°</label>
           <input
@@ -803,7 +808,8 @@ export default function CircularMotionWaveSimulationComponent() {
             className="w-64 accent-indigo-600"
           />
         </div>
-      </div>
+        </div>
+
 
       <div className="space-y-4 bg-white p-4 rounded-lg shadow">
         <div className="flex items-center space-x-4">
@@ -839,6 +845,8 @@ export default function CircularMotionWaveSimulationComponent() {
           </span>
         </div>
 
+
+
         <div className="text-gray-800">
           赤色の位相：  <InlineMath math={thetaEquation()} />
         </div>
@@ -860,6 +868,7 @@ export default function CircularMotionWaveSimulationComponent() {
 
         </div>
       </div>
+      <br />
       <p>
       説明：
     </p>
