@@ -315,7 +315,7 @@ export default function WaveSimulation() {
   const [sourceDistance, setSourceDistance] = useState<number>(20)
   const [period, setPeriod] = useState<number>(1)
   const [speed, setSpeed] = useState<number>(2)
-  const [dot, setDot] = useState<number>(300)
+  const [dot, setDot] = useState<number>(150)
   const [attenuation, setAttenuation] = useState<number>(20)
   const [blackThreshold, setBlackThreshold] = useState<number>(0)
   const [phaseShift, setPhaseShift] = useState<number>(0)
